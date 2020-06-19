@@ -1,0 +1,15 @@
+[package]
+name = "virustotal"
+version = "2.0.0"
+authors = ["Chihiro Hasegawa <encry1024@gmail.com>"]
+license = "MIT"
+description = "The library for VirusTotal Public API 2.0"
+repository = "https://github.com/owlinux1000/virustotal.rs"
+readme = "README.md"
+keywords = ["rust", "virustotal"]
+
+[dependencies]
+reqwest = "0.9.22"
+serde = "1.0.102"
+serde_json = "1.0.41"
+serde_derive = "1.0.102"
