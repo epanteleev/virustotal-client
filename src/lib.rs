@@ -221,9 +221,14 @@ impl fmt::Display for Scan {
 
 impl fmt::Display for FileReportResponse {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f,"Response code: {}\n", self.response_code);
+
         let scan = match &self.scans {
             Some(el) => el,
-            None => return Ok(())
+            None => {
+                write!(f, "{}", "Empty scan information".red());
+                return Ok(())
+            }
         };
         let date = self.scan_date.as_ref().unwrap();
         write!(f, "{} {}\n","Data:".yellow(), date);
