@@ -75,7 +75,7 @@ impl <'a>VtClient<'a> {
             .form(&[("apikey", self.api_key), ("resource", &resource)])
             .send()
             .unwrap();
-        
+
         let text: &str = &resp.text().unwrap();
         from_str(&text).unwrap()
      

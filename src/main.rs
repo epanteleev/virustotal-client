@@ -4,11 +4,13 @@ extern crate clap;
 extern crate core;
 
 use virustotal::*;
-use colored::{Colorize, ColoredString};
+use colored::{Colorize};
 
 use clap::{Arg, App};
 use std::fs::File;
 use std::io::{Write, Read};
+
+const ENV:&str = "LOCALAPPDATA";
 
 fn save_key(key: &str) -> std::io::Result<()> {
     let mut env = std::env::vars();
@@ -26,14 +28,14 @@ fn read_key() -> String {
     let mut env = std::env::vars();
     let (_, v) = env.find(
         |p: &(String, String)| {
-            p.0 == "LOCALAPPDATA"
+            p.0 == ENV
         }).unwrap();
     let mut file = match File::open(format!("{}{}", v, "/virustotal-client-key.txt")) {
         Ok(f) => f,
         Err(e) => panic!("Key wasn't found in {}. {}", v, e)
     };
     let mut key = String::new();
-    file.read_to_string(&mut key);
+    file.read_to_string(&mut key).unwrap();
     key
 }
 
@@ -55,7 +57,14 @@ fn main() -> std::io::Result<()> {
         .get_matches();
 
     let file = match matches.value_of("file") {
-        Some(elem) => elem,
+        Some(elem) => {
+            if std::path::Path::new(elem).exists(){
+                elem
+            } else {
+                println!("File {} no found", elem.red());
+                return Ok(())
+            }
+        },
         None => {
             println!("{}", "Use --help command".red().to_string());
             return Ok(())
@@ -66,13 +75,19 @@ fn main() -> std::io::Result<()> {
     let api_key = match matches.value_of("key") {
         None => read_key(),
         Some(api) => {
-            save_key(api);
+            save_key(api)?;
             api.to_string()
         }
     };
-    let vt =  VtClient::new(api_key.as_str());
-    let res = vt.scan_file(file);
-    println!("{}", vt.report_file(&res.scan_id.unwrap()));
-    println!("{}", "Done".green());
+    let panic = std::panic::catch_unwind(|| {
+        let vt = VtClient::new(api_key.as_str());
+        let res = vt.scan_file(file);
+        let report = vt.report_file(&res.resource.unwrap().to_string());
+        println!("{}", report);
+    });
+    match panic {
+        Ok(_) => println!("{}", "Done".green()),
+        Err(_) => println!("{}", "Abort".red()),
+    };
     Ok(())
 }
