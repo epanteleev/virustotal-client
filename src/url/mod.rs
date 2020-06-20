@@ -37,9 +37,7 @@ impl <'a>VtClient<'a> {
     /// ```
     pub fn report_url(self, resource: &str) -> UrlReportResponse {
 
-        let params: &str = &format!(
-            "?apikey={}&resource={}", self.api_key, &resource
-        );
+        let params: &str = &format!("?apikey={}&resource={}", self.api_key, &resource);
         let url = &[self.endpoint, "/url/report", params].join("");
         let mut resp = Client::new()
             .get(url)

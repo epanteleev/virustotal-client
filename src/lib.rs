@@ -4,10 +4,12 @@ extern crate serde_json;
 extern crate reqwest;
 extern crate core;
 extern crate serde;
+extern crate colored;
 
 use std::collections::HashMap;
 use core::fmt;
 use serde::export::Formatter;
+use colored::Colorize;
 
 /// A set of scanning an URL
 pub mod url;
@@ -189,24 +191,31 @@ pub struct VtClient<'a> {
     api_key: &'a str,
     endpoint: &'a str
 }
+
 impl <'a>VtClient<'a> {
     pub fn new(api_key: &'a str) -> Self {
         VtClient{api_key: api_key, endpoint: "https://www.virustotal.com/vtapi/v2"}
     }
 }
 
-//Todo unimplemented yet
+
 impl fmt::Display for Scan {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let res = match &self.result {
             Some(elem) => elem,
             None => ""
         };
-        let detail = match &self.detail {
-            Some(elem) => elem,
-            None => ""
+        let version = match &self.version {
+            Some(elem) => format!("Version {}", elem),
+            None => "".to_string()
         };
-        write!(f, "Result: {} Detail: {}", res, detail)
+        let detect =  if self.detected.unwrap() == false {
+            "Undetected".green().to_string()
+        } else {
+            format!("{} {}", "Detected".red().to_string(), res)
+        };
+
+        write!(f, "{} {}", version, detect)
     }
 }
 
@@ -216,8 +225,10 @@ impl fmt::Display for FileReportResponse {
             Some(el) => el,
             None => return Ok(())
         };
+        let date = self.scan_date.as_ref().unwrap();
+        write!(f, "{} {}\n","Data:".yellow(), date);
         for (i, j) in scan {
-            write!(f, "{}, {}", i, j);
+            write!(f, "{}: {}\n", i, j);
         }
         Ok(())
     }
